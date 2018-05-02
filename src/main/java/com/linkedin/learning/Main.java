@@ -2,9 +2,11 @@ package com.linkedin.learning;
 
 
 import io.reactivex.Observable;
-import java.util.ArrayList;
+import io.reactivex.ObservableEmitter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 public class Main {
 
@@ -23,10 +25,15 @@ public class Main {
     //
     Observable<String> stringObservable = Observable.just("one object");
 
-
     Observable.just("Hello");
 
     Observable customObservableNonBlocking = customObservableNonBlocking();
+
+    Observable.interval(100, TimeUnit.MILLISECONDS);
+
+    customObservableNonBlocking
+        .subscribe(eachVal -> System.out.println("Printing emited Value: " + eachVal));
+
   }
 
   public static void hello(String... names) {
@@ -37,15 +44,28 @@ public class Main {
   public static Observable customObservableNonBlocking() {
     return Observable.create(emitter -> {
       try {
-        List<String> todos = new ArrayList<>();
-        for (String todo : todos) {
-          emitter.onNext(todo);
-        }
+        IntStream.range(0, 50)
+            .boxed().forEach(intVal ->
+            simulateDelay(emitter, "Item: " + intVal.toString())
+        );
+
         emitter.onComplete();
       } catch (Exception e) {
         emitter.onError(e);
       }
     });
+  }
+
+  public static void simulateDelay(ObservableEmitter emitter, String s) {
+    try {
+      Integer waitTime = Double.valueOf(Math.random() * 305).intValue();
+      System.out.println("waitTime = " + waitTime);
+      TimeUnit.MILLISECONDS.sleep(waitTime);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    emitter.onNext(s);
   }
 
 }
