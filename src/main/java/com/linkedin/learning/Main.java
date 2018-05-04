@@ -3,6 +3,9 @@ package com.linkedin.learning;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
+import io.reactivex.Scheduler;
+import io.reactivex.observers.DefaultObserver;
+import io.reactivex.schedulers.Schedulers;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -14,26 +17,78 @@ public class Main {
 
     hello("My old friend", "Chris", "World");
 
-    //Create
+    /** Create Observables in many different ways
+     *
+     */
+
+    //From array
     String[] stringArray = new String[]{"hi", "hola", "bonjour"};
     Observable<String> observable = Observable.fromArray(stringArray);
 
-    //
-    List<Integer> list = Arrays.asList(new Integer[]{1, 2, 3, 4});
+    //From a List
+    List<Integer> list = Arrays.asList(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
     Observable<Integer> integerObservable = Observable.fromIterable(list);
 
-    //
+    //From a single string
     Observable<String> stringObservable = Observable.just("one object");
 
-    Observable.just("Hello");
-
+    //Defining a custom observable
     Observable customObservableNonBlocking = customObservableNonBlocking();
 
-    Observable.interval(100, TimeUnit.MILLISECONDS);
+    //Define interval observable
+    Observable interval = Observable.interval(100, TimeUnit.MILLISECONDS);
 
-    customObservableNonBlocking
-        .subscribe(eachVal -> System.out.println("Printing emited Value: " + eachVal));
+    /** END Create
+     *
+     */
 
+    /** Applying operators to Observables
+     *
+     */
+    //Examples of map
+
+    System.out.println("Printing: integerObservable");
+    System.out.println();
+
+    //Using consumer static method reference
+    System.out.println("BEFORE FILTER");
+    integerObservable.subscribe(Main::printObservable);
+    System.out.println();
+
+    //Filter out values
+    System.out.println("AFTER FILTER");
+    integerObservable.filter(v -> v > 4).subscribe(Main::printObservable);
+    System.out.println();
+
+    //Filter map values to square
+    System.out.println("AFTER FILTER AND MAP");
+    integerObservable.filter(i -> i > 4).map(i -> Math.multiplyExact(i,i) ).subscribe(Main::printObservable);
+
+    /** Using observers
+     *
+     */
+
+    integerObservable.subscribe(new ConsolePrintObserver());
+
+
+    /** Using scheduler
+     *
+     */
+
+    System.out.print("Using Scheduler.io");
+    integerObservable.subscribeOn(Schedulers.newThread()).subscribe(new ConsolePrintObserver());
+
+
+    /** Using operators, observer and a scheduler
+     *
+     */
+
+    integerObservable.subscribeOn(Schedulers.newThread()).filter(v -> v > 4).map(i -> Math.multiplyExact(i,i)).subscribe(new ConsolePrintObserver());
+  }
+
+  private static <T> void printObservable(T val) {
+
+    System.out.print(val + " --- ");
   }
 
   public static void hello(String... names) {
